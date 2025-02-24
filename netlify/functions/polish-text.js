@@ -5,12 +5,16 @@ exports.handler = async function(event, context) {
     return { statusCode: 405, body: "Method Not Allowed" };
   }
 
+  console.log('API Key exists:', !!process.env.OPENAI_API_KEY);
+
   try {
     const configuration = new Configuration({
       apiKey: process.env.OPENAI_API_KEY,
     });
     const openai = new OpenAIApi(configuration);
     const { text } = JSON.parse(event.body);
+
+    console.log('Received text:', text);
 
     const response = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
@@ -29,6 +33,8 @@ exports.handler = async function(event, context) {
       temperature: 0.7
     });
 
+    console.log('OpenAI response:', response.data);
+
     return {
       statusCode: 200,
       headers: {
@@ -39,9 +45,13 @@ exports.handler = async function(event, context) {
       }),
     };
   } catch (error) {
+    console.error('Function error:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Failed to process text" }),
+      body: JSON.stringify({ 
+        error: "Failed to process text",
+        details: error.message 
+      }),
     };
   }
 }; 
