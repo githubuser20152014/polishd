@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { OPENAI_API_KEY, API_ENDPOINT } from './config';
 
 function App() {
   const [inputText, setInputText] = useState('');
@@ -59,43 +58,18 @@ function App() {
 
     setIsGenerating(true);
     try {
-      const response = await fetch(API_ENDPOINT, {
+      const response = await fetch('/.netlify/functions/polish-text', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`
         },
-        body: JSON.stringify({
-          model: "gpt-3.5-turbo",
-          messages: [{
-            role: "system",
-            content: `You are a professional editor who specializes in concise, friendly-professional communication. Format the input text into an email:
-            1. Start with "Subject: " followed by a brief, clear subject line
-            2. Add TWO line breaks after the subject line
-            3. Keep the message concise and conversational yet professional
-            4. Remove any unnecessary formalities or redundant phrases
-            5. Maintain the core message and intent
-
-            Format exactly like this example:
-            Subject: [Brief subject]
-
-
-            [Concise, friendly-professional message]
-
-            Note: Ensure there are exactly TWO empty lines between subject and body.`
-          }, {
-            role: "user",
-            content: inputText
-          }],
-          temperature: 0.7
-        })
+        body: JSON.stringify({ text: inputText })
       });
 
       const data = await response.json();
-      if (data.choices && data.choices[0]) {
-        const generatedText = data.choices[0].message.content;
-        setPolishedText(generatedText);
-        setEditablePolishedText(generatedText);
+      if (data.message) {
+        setPolishedText(data.message);
+        setEditablePolishedText(data.message);
       }
     } catch (error) {
       console.error('Error generating polished text:', error);
@@ -104,6 +78,12 @@ function App() {
     } finally {
       setIsGenerating(false);
     }
+  };
+
+  const handleClear = () => {
+    setInputText('');
+    setEditablePolishedText('');
+    setPolishedText('');
   };
 
   return (
@@ -125,6 +105,12 @@ function App() {
             className={`mic-button ${isListening ? 'active' : ''}`}
           >
             🎤
+          </button>
+          <button 
+            onClick={handleClear}
+            className="clear-button"
+          >
+            Clear
           </button>
         </div>
         
